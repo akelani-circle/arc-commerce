@@ -17,20 +17,22 @@ This project demonstrates how to integrate USDC as a payment method for purchasi
    npm install
    ```
 
-2. **Set up environment variables:**
-
-   ```bash
-   cp .env.example .env.local
-   ```
-
-   Then edit `.env.local` and fill in all required values (see [Environment Variables](#environment-variables) section below).
-
-3. **Start Supabase locally** (requires Docker):
+2. **Start Supabase locally** (requires Docker):
 
    ```bash
    npx supabase start
    npx supabase migration up
    ```
+
+   The output of `npx supabase start` will display the Supabase URL and API keys needed in the next step.
+
+3. **Set up environment variables:**
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Then edit `.env.local` and fill in all required values. Use the Supabase URL and keys from the previous step's output (see [Environment Variables](#environment-variables) section below).
 
 4. **Start the development server:**
 
@@ -61,7 +63,7 @@ Copy `.env.example` to `.env.local` and fill in the required values:
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SECRET_KEY=
 
 # Circle
 CIRCLE_API_KEY=
@@ -77,9 +79,9 @@ ADMIN_EMAIL=admin@admin.com
 | ------------------------------------- | ----------- | ------------------------------------------------------------------------ |
 | `NEXT_PUBLIC_SUPABASE_URL`            | Public      | Supabase project URL.                                                    |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY` | Public | Supabase anonymous/public key.                                           |
-| `SUPABASE_SERVICE_ROLE_KEY`           | Server-side | Service role for privileged writes (e.g., transaction inserts).          |
+| `SUPABASE_SECRET_KEY`           | Server-side | Secret key for privileged writes (e.g., transaction inserts).                  |
 | `CIRCLE_API_KEY`                      | Server-side | Used to fetch Circle webhook public keys for signature verification.     |
 | `CIRCLE_ENTITY_SECRET`                | Server-side | Circle entity secret for wallet operations.                              |
 | `CIRCLE_BLOCKCHAIN`                   | Server-side | Blockchain network identifier (e.g., "ARC-TESTNET").                     |
-| `CIRCLE_USDC_TOKEN_ID`                | Server-side | USDC token ID for the specified blockchain.                              |
+| `CIRCLE_USDC_TOKEN_ID`                | Server-side | USDC token ID for the specified blockchain. Pre-filled for ARC-TESTNET.  |
 | `ADMIN_EMAIL`                         | Server-side | Admin user email address.                                                |
