@@ -4,8 +4,16 @@ This project demonstrates how to integrate USDC as a payment method for purchasi
 
 ## Table of Contents
 
+- [Prerequisites](#prerequisites)
 - [Clone and Run Locally](#clone-and-run-locally)
 - [Environment Variables](#environment-variables)
+- [User Accounts](#user-accounts)
+
+## Prerequisites
+
+- **Node.js v22+** — Install via [nvm](https://github.com/nvm-sh/nvm) (`nvm use` will read the `.nvmrc` file)
+- **Supabase CLI** — Install via `npm install -g supabase` or see [Supabase CLI docs](https://supabase.com/docs/guides/cli/getting-started)
+- **Docker Desktop** (only if using the local Supabase path) — [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ## Clone and Run Locally
 
@@ -17,7 +25,12 @@ This project demonstrates how to integrate USDC as a payment method for purchasi
    npm install
    ```
 
-2. **Start Supabase locally** (requires Docker):
+2. **Set up the database** — Choose one of the two paths below:
+
+   <details>
+   <summary><strong>Path 1: Local Supabase (Docker)</strong></summary>
+
+   Requires Docker Desktop installed and running.
 
    ```bash
    npx supabase start
@@ -25,6 +38,22 @@ This project demonstrates how to integrate USDC as a payment method for purchasi
    ```
 
    The output of `npx supabase start` will display the Supabase URL and API keys needed in the next step.
+
+   </details>
+
+   <details>
+   <summary><strong>Path 2: Remote Supabase (Cloud)</strong></summary>
+
+   Requires a [Supabase](https://supabase.com/) account and project.
+
+   ```bash
+   npx supabase link --project-ref <your-project-ref>
+   npx supabase db push
+   ```
+
+   Retrieve your project URL and API keys from the Supabase dashboard under **Settings → API**.
+
+   </details>
 
 3. **Set up environment variables:**
 
@@ -85,3 +114,23 @@ ADMIN_EMAIL=admin@admin.com
 | `CIRCLE_BLOCKCHAIN`                   | Server-side | Blockchain network identifier (e.g., "ARC-TESTNET").                     |
 | `CIRCLE_USDC_TOKEN_ID`                | Server-side | USDC token ID for the specified blockchain. Pre-filled for ARC-TESTNET.  |
 | `ADMIN_EMAIL`                         | Server-side | Admin user email address.                                                |
+
+## User Accounts
+
+### Admin Account
+
+On first startup, an admin user is automatically created with the following credentials:
+
+- **Email:** `admin@admin.com`
+- **Password:** `123456`
+
+The admin account has access to the **Admin Dashboard**, which provides an overview of all users, wallets, and transactions in the system.
+
+Regular users who sign up will see the **User Dashboard**, which allows them to purchase credits with USDC and view their own transaction history.
+
+### Signup Rate Limits
+
+Supabase limits email signups to **2 per hour** by default (unless custom SMTP is configured). If you hit an "email rate limit exceeded" error during testing:
+
+- **Local Supabase (Docker):** Email verification is handled by the built-in [Inbucket](http://127.0.0.1:54324) mail server — check it to confirm signups. The rate limit can be adjusted in `supabase/config.toml` under `[auth.rate_limit]`.
+- **Remote Supabase (Cloud):** Use real email addresses (disposable emails may fail verification). If you hit the limit, you can manually add users via the Supabase dashboard under **Authentication → Users**.
