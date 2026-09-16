@@ -51,11 +51,19 @@ export function BalanceDialog({ wallet, onClose }: BalanceDialogProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [balances, setBalances] = useState<TokenBalance[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [prevWallet, setPrevWallet] = useState(wallet);
 
-  useEffect(() => {
+  // Reset loading state as soon as a different wallet is selected
+  if (wallet !== prevWallet) {
+    setPrevWallet(wallet);
     if (wallet) {
       setIsLoading(true);
       setError(null);
+    }
+  }
+
+  useEffect(() => {
+    if (wallet) {
       getWalletBalance(wallet.address, wallet.chain ?? "").then((result) => {
         if (result.error) {
           setError(result.error);

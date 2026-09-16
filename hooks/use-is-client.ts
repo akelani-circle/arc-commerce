@@ -16,14 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+"use client";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+import { useSyncExternalStore } from "react";
+
+const subscribe = () => () => {};
+
+/**
+ * Returns false during SSR and hydration, true once rendering on the client.
+ */
+export function useIsClient() {
+  return useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false
+  );
 }
-
-// This check can be removed, it is just for tutorial purposes
-export const hasEnvVars =
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

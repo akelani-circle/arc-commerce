@@ -18,14 +18,24 @@
 
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  createPaginatedRowModel,
+  rowPaginationFeature,
+  tableFeatures,
+} from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { CopyableCell } from "@/components/admin-wallets-table/columns";
 import { AdminTransaction } from "@/types/admin-transaction";
 import { getExplorerUrl } from "@/lib/utils/chain-utils";
 import { ClientDate } from "@/components/ui/client-date";
 
-export const columns: ColumnDef<AdminTransaction, unknown>[] = [
+export const features = tableFeatures({
+  rowPaginationFeature,
+  paginatedRowModel: createPaginatedRowModel(),
+});
+
+export const columns: ColumnDef<typeof features, AdminTransaction>[] = [
   {
     accessorKey: "circle_transaction_id",
     header: "Transaction ID",

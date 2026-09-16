@@ -18,7 +18,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Database } from "@/types/supabase";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,32 +66,31 @@ export function TransferDialog({
   const [selectedAddress, setSelectedAddress] = useState("");
   const [customAddress, setCustomAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCrossChain, setIsCrossChain] = useState(false);
+  const [prevSourceWallet, setPrevSourceWallet] = useState(sourceWallet);
 
-  useEffect(() => {
+  // Reset the form when the dialog closes
+  if (sourceWallet !== prevSourceWallet) {
+    setPrevSourceWallet(sourceWallet);
     if (!sourceWallet) {
       setAmount("");
       setDestinationType("existing");
       setSelectedAddress("");
       setCustomAddress("");
-      setIsCrossChain(false);
     }
-  }, [sourceWallet]);
+  }
 
-  useEffect(() => {
-    if (destinationType === "existing" && selectedAddress && sourceWallet) {
-      const destinationWallet = otherWallets.find(
-        (wallet) => wallet.address === selectedAddress
-      );
-      // A cross-chain transfer is only possible if both wallets have a chain.
-      if (destinationWallet && sourceWallet.chain && destinationWallet.chain) {
-        setIsCrossChain(sourceWallet.chain !== destinationWallet.chain);
-      } else {
-        setIsCrossChain(false);
-      }
-    } else {
-      setIsCrossChain(false);
+  const isCrossChain = useMemo(() => {
+    if (destinationType !== "existing" || !selectedAddress || !sourceWallet) {
+      return false;
     }
+    const destinationWallet = otherWallets.find(
+      (wallet) => wallet.address === selectedAddress
+    );
+    // A cross-chain transfer is only possible if both wallets have a chain.
+    if (destinationWallet && sourceWallet.chain && destinationWallet.chain) {
+      return sourceWallet.chain !== destinationWallet.chain;
+    }
+    return false;
   }, [selectedAddress, sourceWallet, otherWallets, destinationType]);
 
   const isFormValid = useMemo(() => {

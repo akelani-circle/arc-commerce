@@ -19,7 +19,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Table } from "@tanstack/react-table";
+import { ReactTable } from "@tanstack/react-table";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,13 +27,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, XIcon } from "lucide-react";
 import { format } from "date-fns";
+import type { TransactionRow } from "@/components/user-transactions-table/columns";
+import { features } from "@/components/user-transactions-table/columns";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
+interface DataTableToolbarProps {
+  table: ReactTable<typeof features, TransactionRow>;
 }
 
-export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
+export function DataTableToolbar({ table }: DataTableToolbarProps) {
+  const isFiltered = table.state.columnFilters.length > 0;
 
   // read from the table state. the value is an array: [Date | undefined, Date | undefined]
   const dateFilterValue = table.getColumn("date")?.getFilterValue() as [Date | undefined, Date | undefined] | undefined;

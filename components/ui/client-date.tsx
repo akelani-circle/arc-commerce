@@ -18,7 +18,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useIsClient } from "@/hooks/use-is-client";
 import { format } from "date-fns";
 
 interface ClientDateProps {
@@ -32,11 +32,7 @@ interface ClientDateProps {
  * This ensures consistent formatting between server and client renders.
  */
 export function ClientDate({ date, formatString = "PPpp" }: ClientDateProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   if (!mounted) {
     // During SSR, return empty content to avoid hydration mismatch
@@ -44,11 +40,13 @@ export function ClientDate({ date, formatString = "PPpp" }: ClientDateProps) {
     return <span suppressHydrationWarning>&nbsp;</span>;
   }
 
+  let formatted: string;
   try {
     const dateObj = typeof date === "string" ? new Date(date) : date;
-    return <span suppressHydrationWarning>{format(dateObj, formatString)}</span>;
+    formatted = format(dateObj, formatString);
   } catch {
-    return <span suppressHydrationWarning>Invalid date</span>;
+    formatted = "Invalid date";
   }
+  return <span suppressHydrationWarning>{formatted}</span>;
 }
 

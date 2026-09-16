@@ -29,6 +29,7 @@ export type { AdminTransaction };
 
 export function useRealtimeAdminTransactions(initialData: AdminTransaction[]) {
   const [transactions, setTransactions] = useState(initialData);
+  const [prevInitialData, setPrevInitialData] = useState(initialData);
   const [adminWalletAddresses, setAdminWalletAddresses] = useState<string[]>([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
   const supabase = useMemo(() => createClient(), []);
@@ -54,10 +55,10 @@ export function useRealtimeAdminTransactions(initialData: AdminTransaction[]) {
   }, []);
 
   // Sync initialData to state when it changes (from router.refresh())
-  useEffect(() => {
-    console.log("[Realtime] Syncing initialData to state");
+  if (initialData !== prevInitialData) {
+    setPrevInitialData(initialData);
     setTransactions(initialData);
-  }, [initialData]);
+  }
 
   // Set up realtime subscription (only re-subscribe if admin wallets or loading state changes)
   useEffect(() => {
