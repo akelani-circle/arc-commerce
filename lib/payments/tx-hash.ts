@@ -16,23 +16,5 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AppKit } from "@circle-fin/app-kit";
-import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
-
-let cachedKit: AppKit | null = null;
-
-export function getAppKit(): AppKit {
-  if (!cachedKit) cachedKit = new AppKit();
-  return cachedKit;
-}
-
-export function createAdapter() {
-  const apiKey = process.env.CIRCLE_API_KEY;
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
-  if (!apiKey || !entitySecret) {
-    throw new Error(
-      "CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET must be set to use Circle wallets."
-    );
-  }
-  return createCircleWalletsAdapter({ apiKey, entitySecret });
-}
+/** A 32-byte transaction hash, 0x-prefixed. Case is not significant on-chain. */
+export const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;

@@ -93,18 +93,23 @@ export function TransactionConfirmationModal({
 
     const updateTransactionStatus = async () => {
       try {
-        const response = await fetch(`/api/transactions/${transaction.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: "complete",
-            txHash: transaction.txHash,
-            blockNumber: Number(receipt.blockNumber),
-            blockHash: receipt.blockHash,
-          }),
-        });
+        // The server re-verifies the receipt on its own RPC, which can lag the
+        // wallet's by a few seconds (409 = not confirmed there yet), so retry.
+        let response: Response | undefined;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          response = await fetch(`/api/transactions/${transaction.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: "complete",
+              txHash: transaction.txHash,
+            }),
+          });
+          if (response.status !== 409) break;
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
 
-        if (response.ok) {
+        if (response?.ok) {
           const data = await response.json();
           if (data.transaction) {
             setRealtimeTx(prev => ({

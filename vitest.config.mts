@@ -16,23 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AppKit } from "@circle-fin/app-kit";
-import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
 
-let cachedKit: AppKit | null = null;
-
-export function getAppKit(): AppKit {
-  if (!cachedKit) cachedKit = new AppKit();
-  return cachedKit;
-}
-
-export function createAdapter() {
-  const apiKey = process.env.CIRCLE_API_KEY;
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
-  if (!apiKey || !entitySecret) {
-    throw new Error(
-      "CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET must be set to use Circle wallets."
-    );
-  }
-  return createCircleWalletsAdapter({ apiKey, entitySecret });
-}
+// Unit tests: no network, database or wallet credentials required.
+export default defineConfig({
+  resolve: {
+    alias: { "@": fileURLToPath(new URL(".", import.meta.url)) },
+  },
+  test: {
+    environment: "node",
+    include: ["tests/unit/**/*.test.ts"],
+    restoreMocks: true,
+  },
+});

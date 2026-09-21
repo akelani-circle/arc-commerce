@@ -16,23 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AppKit } from "@circle-fin/app-kit";
-import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
+import { Database } from "@/types/supabase";
 
-let cachedKit: AppKit | null = null;
+type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"];
 
-export function getAppKit(): AppKit {
-  if (!cachedKit) cachedKit = new AppKit();
-  return cachedKit;
-}
-
-export function createAdapter() {
-  const apiKey = process.env.CIRCLE_API_KEY;
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
-  if (!apiKey || !entitySecret) {
-    throw new Error(
-      "CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET must be set to use Circle wallets."
-    );
-  }
-  return createCircleWalletsAdapter({ apiKey, entitySecret });
+/** Shape returned to the browser for a recorded USER purchase. */
+export function serializeTransaction(tx: TransactionRow) {
+  return {
+    id: tx.id,
+    credits: Number(tx.credit_amount),
+    usdcAmount: Number(tx.amount_usdc),
+    txHash: tx.tx_hash,
+    chainId: Number(tx.chain),
+    status: tx.status,
+    createdAt: tx.created_at,
+    walletAddress: tx.wallet_id,
+  };
 }

@@ -47,13 +47,6 @@ export const CHAIN_IDS_TO_USDC_ADDRESSES: Record<number, Hex> = {
   [SupportedChainId.ARC_TESTNET]: "0x3600000000000000000000000000000000000000"
 };
 
-export const CHAIN_IDS_TO_USDC_TOKEN_ID: Record<number, string> = {
-  [SupportedChainId.ETH_SEPOLIA]: "b1698135-ebb1-5e40-9c3b-6a1213f4b754",
-  [SupportedChainId.AVAX_FUJI]: "da27d231-a690-5521-a2f3-1873b4134155",
-  [SupportedChainId.BASE_SEPOLIA]: "5a64c456-03f7-5238-a77a-a780b0b90263",
-  [SupportedChainId.ARC_TESTNET]: "15dc2b5d-0994-58b0-bf8c-3a0501148ee8"
-};
-
 // Maps Circle/DB chain strings (e.g. "ARC-TESTNET") to App Kit BridgeChain identifiers.
 export const CHAIN_DB_TO_BRIDGE_CHAIN: Record<string, string> = {
   "ARC-TESTNET": "Arc_Testnet",
