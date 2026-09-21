@@ -29,16 +29,11 @@ export default async function DashboardPage() {
     error,
   } = await supabase.auth.getUser();
 
-  // 1. Ensure a user is logged in
   if (error || !user) {
     redirect("/auth/login");
   }
 
-  // 2. Perform the security check on the server
-  // We compare the user's email with the secure environment variable.
   const isAdmin = user.email === process.env.ADMIN_EMAIL;
 
-  // 3. Render the appropriate dashboard component
-  // A regular user's browser will never receive the <AdminDashboard /> component.
   return isAdmin ? <AdminDashboard /> : <UserDashboard />;
 }

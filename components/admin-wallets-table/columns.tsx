@@ -277,7 +277,6 @@ export const columns: ColumnDef<typeof features, Wallet>[] = [
       const address = row.original.address;
       const chain = row.original.chain;
 
-      // Convert chain name to numeric ID for the utility function
       const chainId = chain ? chainNameToId(chain) : undefined;
       const explorerUrl = chainId
         ? getExplorerUrl(chainId, undefined, address)

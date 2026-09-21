@@ -89,11 +89,7 @@ async function logWebhookEvent(
   }
 }
 
-/**
- * Updates USER credit-purchase transactions when Circle confirms the on-chain transfer.
- * ADMIN and bridge transactions are handled synchronously by App Kit and logged as
- * complete at submission time, so they do not need webhook updates here.
- */
+// ADMIN and bridge transfers are logged synchronously; only USER credit purchases need this.
 async function updateUserTransactionStatus(notification: CircleNotification) {
   const mappedStatus = mapCircleStateToStatus(notification.state);
   if (!mappedStatus) return;

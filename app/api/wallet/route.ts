@@ -22,7 +22,6 @@ import { Blockchain } from "@circle-fin/developer-controlled-wallets";
 
 export async function POST(request: Request) {
   try {
-    // Destructure the optional `blockchain` from the request body.
     const { walletSetId, blockchain } = await request.json();
 
     if (!walletSetId) {
@@ -32,7 +31,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use the provided blockchain, or fall back to the environment variable.
     const targetBlockchain =
       blockchain || (process.env.CIRCLE_BLOCKCHAIN as Blockchain);
 

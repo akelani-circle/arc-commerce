@@ -47,9 +47,6 @@ export interface TokenBalance {
   amount: string;
 }
 
-/**
- * Creates a new Circle wallet via internal API routes and saves it to the database.
- */
 export async function createAdminWallet(formData: FormData) {
   const label = formData.get("label") as string;
   const blockchain = formData.get("blockchain") as string;
@@ -100,9 +97,6 @@ export async function createAdminWallet(formData: FormData) {
   }
 }
 
-/**
- * Updates the status of an existing admin wallet.
- */
 export async function updateAdminWalletStatus(
   id: string,
   status: WalletStatus
@@ -125,9 +119,6 @@ export async function updateAdminWalletStatus(
   }
 }
 
-/**
- * Fetches the USDC balance for an admin wallet by reading directly from the chain.
- */
 export async function getWalletBalance(
   walletAddress: string,
   chainDbString: string
@@ -178,10 +169,6 @@ export async function getWalletBalance(
   }
 }
 
-/**
- * Transfers USDC from an admin wallet to a destination address on the same chain
- * using App Kit Send.
- */
 export async function transferFromAdminWallet(
   sourceCircleWalletId: string,
   destinationAddress: string,
@@ -255,10 +242,6 @@ export async function transferFromAdminWallet(
   }
 }
 
-/**
- * Bridges USDC from an admin wallet to a destination address on a different chain
- * using App Kit Bridge (CCTPv2 Fast). Blocks until the full bridge is complete.
- */
 export async function transferFromAdminWalletCCTP(
   sourceCircleWalletId: string,
   destinationAddress: string,
@@ -362,9 +345,6 @@ export async function transferFromAdminWalletCCTP(
   }
 }
 
-/**
- * Fetches all admin wallet addresses for filtering realtime subscriptions.
- */
 export async function getAdminWalletAddresses(): Promise<string[]> {
   try {
     const { data, error } = await supabaseAdminClient

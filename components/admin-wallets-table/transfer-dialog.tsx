@@ -44,8 +44,6 @@ import { transferFromAdminWallet, transferFromAdminWalletCCTP } from "@/lib/acti
 import { Loader2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// The Wallet type now correctly reflects that `chain` can be `string | null`,
-// matching the database schema.
 type Wallet = Database["public"]["Tables"]["admin_wallets"]["Row"];
 
 interface TransferDialogProps {
@@ -68,7 +66,6 @@ export function TransferDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prevSourceWallet, setPrevSourceWallet] = useState(sourceWallet);
 
-  // Reset the form when the dialog closes
   if (sourceWallet !== prevSourceWallet) {
     setPrevSourceWallet(sourceWallet);
     if (!sourceWallet) {
@@ -86,7 +83,6 @@ export function TransferDialog({
     const destinationWallet = otherWallets.find(
       (wallet) => wallet.address === selectedAddress
     );
-    // A cross-chain transfer is only possible if both wallets have a chain.
     if (destinationWallet && sourceWallet.chain && destinationWallet.chain) {
       return sourceWallet.chain !== destinationWallet.chain;
     }

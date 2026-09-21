@@ -37,10 +37,8 @@ interface DataTableToolbarProps {
 export function DataTableToolbar({ table }: DataTableToolbarProps) {
   const isFiltered = table.state.columnFilters.length > 0;
 
-  // read from the table state. the value is an array: [Date | undefined, Date | undefined]
   const dateFilterValue = table.getColumn("date")?.getFilterValue() as [Date | undefined, Date | undefined] | undefined;
 
-  // translate the array into a DateRange object for the Calendar component.
   const selectedDateRange: DateRange | undefined = useMemo(() => {
     if (!dateFilterValue) return undefined;
     const [from, to] = dateFilterValue;
@@ -77,7 +75,6 @@ export function DataTableToolbar({ table }: DataTableToolbarProps) {
               mode="range"
               defaultMonth={selectedDateRange?.from}
               selected={selectedDateRange}
-              // translate the DateRange object from the Calendar back into an array for the table state.
               onSelect={(newDateRange) => {
                 table.getColumn("date")?.setFilterValue(
                   newDateRange ? [newDateRange.from, newDateRange.to] : undefined

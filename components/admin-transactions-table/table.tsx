@@ -40,7 +40,6 @@ export function AdminTransactionsTable({
   columns,
   initialData,
 }: AdminTransactionsTableProps) {
-  // Use the custom hook to manage real-time data
   const data = useRealtimeAdminTransactions(initialData);
 
   const table = useTable({

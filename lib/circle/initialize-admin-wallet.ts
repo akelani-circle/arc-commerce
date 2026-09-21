@@ -23,19 +23,12 @@ const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
   ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
   : "http://localhost:3000";
 
-// Supabase Admin Client Initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_KEY;
 
-// This in-memory flag ensures the initialization logic runs only once per server start.
 let isInitialized = false;
 
-/**
- * An idempotent, self-invoking async function that creates the primary platform
- * admin wallet if it does not already exist in the database.
- */
 const runPlatformInitialization = async () => {
-  // 1. Check the in-memory flag to prevent redundant runs.
   if (isInitialized) {
     return;
   }
@@ -47,7 +40,6 @@ const runPlatformInitialization = async () => {
       "Supabase URL or Service Role Key is not set. Initialization cannot proceed."
     );
 
-    // Mark as initialized to prevent retries
     isInitialized = true;
     return;
   }
@@ -60,17 +52,13 @@ const runPlatformInitialization = async () => {
   const ADMIN_WALLET_LABEL = "Primary wallet";
 
   try {
-    // 2. Check the database to see if the wallet already exists.
-    // We check for the existence of ANY wallet with the specific label.
     const { data: existingWallet, error: fetchError } = await supabaseAdminClient
       .from("admin_wallets")
       .select("circle_wallet_id")
       .eq("label", ADMIN_WALLET_LABEL)
-      // Use maybeSingle to handle 0 or 1 row gracefully
       .maybeSingle();
 
     if (fetchError && fetchError.code !== "PGRST116") {
-      // Provide more context about the error
       const errorMessage = fetchError.message || "Unknown error";
       const errorCode = fetchError.code || "Unknown code";
       const errorDetails = fetchError.details || "";
@@ -87,7 +75,6 @@ const runPlatformInitialization = async () => {
       return;
     }
 
-    // 3. If not in DB, create it by calling our internal API routes.
     console.log("No platform admin wallet found. Creating a new one...");
 
     const createdWalletSetResponse = await fetch(`${baseUrl}/api/wallet-set`, {
@@ -124,7 +111,6 @@ const runPlatformInitialization = async () => {
       throw new Error("Internal API did not return a complete wallet object.");
     }
 
-    // 4. Store the new wallet details in the new `admin_wallets` table.
     const { error: insertError } = await supabaseAdminClient
       .from("admin_wallets")
       .insert({
@@ -132,12 +118,9 @@ const runPlatformInitialization = async () => {
         label: ADMIN_WALLET_LABEL,
         address: newWallet.address,
         chain: "ARC-TESTNET",
-        // All other columns (status, chain, supported_assets) will use their defaults (ENABLED, NULL, NULL)
       });
 
     if (insertError) {
-      // If we get a unique constraint violation, it means another process already created the wallet
-      // This is fine - just log it and move on
       if (insertError.code === "23505") {
         console.log("Platform admin wallet was created by another process. Initialization complete.");
         return;
@@ -154,7 +137,6 @@ const runPlatformInitialization = async () => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
 
-    // Check if it's a network/connection error
     if (
       errorMessage.includes("invalid response") ||
       errorMessage.includes("fetch failed") ||
@@ -174,7 +156,6 @@ const runPlatformInitialization = async () => {
       );
     }
   } finally {
-    // Mark as initialized even if there was an error to prevent constant retries.
     isInitialized = true;
   }
 };

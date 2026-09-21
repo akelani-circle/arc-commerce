@@ -53,7 +53,6 @@ export function BalanceDialog({ wallet, onClose }: BalanceDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const [prevWallet, setPrevWallet] = useState(wallet);
 
-  // Reset loading state as soon as a different wallet is selected
   if (wallet !== prevWallet) {
     setPrevWallet(wallet);
     if (wallet) {
@@ -108,8 +107,6 @@ export function BalanceDialog({ wallet, onClose }: BalanceDialogProps) {
                 </TableHeader>
                 <TableBody>
                   {balances.map((balance) => {
-                    // The API returns the amount as a string in its major unit (e.g., "29.99").
-                    // We just need to parse it as a number. No division is needed.
                     const formattedAmount = Number(balance.amount);
                     return (
                       <TableRow key={balance.token.symbol}>

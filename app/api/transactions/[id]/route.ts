@@ -20,10 +20,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import { supabaseAdminClient } from "@/lib/supabase/admin-client";
 
-/**
- * GET /api/transactions/[id]
- * Fetches a single transaction by ID for the authenticated user
- */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,7 +34,6 @@ export async function GET(
       );
     }
 
-    // Get authenticated user
     const supabase = await createServerSupabase();
     const {
       data: { user },
@@ -48,7 +43,6 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch transaction (RLS will ensure user can only see their own)
     const { data: transaction, error: txError } = await supabase
       .from("transactions")
       .select("*")
@@ -75,7 +69,6 @@ export async function GET(
       );
     }
 
-    // Fetch related status events
     const { data: statusEvents, error: eventsError } = await supabase
       .from("transaction_events")
       .select("*")
@@ -84,10 +77,8 @@ export async function GET(
 
     if (eventsError) {
       console.error("Failed to fetch transaction events:", eventsError);
-      // Continue without events rather than failing the request
     }
 
-    // Transform the response to match our expected format
     const response = {
       id: transaction.id,
       credits: transaction.credit_amount,
@@ -119,21 +110,6 @@ export async function GET(
   }
 }
 
-/**
- * PATCH /api/transactions/[id]
- * Updates transaction status when MetaMask confirms the transaction on-chain.
- *
- * This provides faster feedback than waiting for Circle webhooks.
- * Only allows updating to 'completed' status to prevent abuse.
- *
- * Expected JSON body:
- * {
- *   "status": "completed",
- *   "txHash": string,      // Must match the transaction's tx_hash for security
- *   "blockNumber": number, // Optional: block number where tx was mined
- *   "blockHash": string    // Optional: block hash for verification
- * }
- */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -143,7 +119,6 @@ export async function PATCH(
     const body = await req.json().catch(() => ({}));
     const { status, txHash, blockNumber, blockHash } = body || {};
 
-    // Validate transaction ID
     if (!id || typeof id !== "string") {
       return NextResponse.json(
         { error: "Invalid transaction ID" },
@@ -151,7 +126,6 @@ export async function PATCH(
       );
     }
 
-    // Only allow updating to 'complete' from client
     if (status !== "complete") {
       return NextResponse.json(
         { error: "Only 'complete' status updates are allowed from client" },
@@ -159,7 +133,6 @@ export async function PATCH(
       );
     }
 
-    // Require txHash for security - ensures caller actually has transaction details
     if (typeof txHash !== "string" || !txHash.startsWith("0x")) {
       return NextResponse.json(
         { error: "Valid txHash is required" },
@@ -167,7 +140,6 @@ export async function PATCH(
       );
     }
 
-    // Get authenticated user
     const supabase = await createServerSupabase();
     const {
       data: { user },
@@ -177,7 +149,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch the transaction to verify ownership and current status
     const { data: transaction, error: fetchError } = await supabaseAdminClient
       .from("transactions")
       .select("*")
@@ -191,12 +162,10 @@ export async function PATCH(
       );
     }
 
-    // Verify ownership
     if (transaction.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Verify txHash matches (security check)
     if (transaction.tx_hash !== txHash) {
       return NextResponse.json(
         { error: "Transaction hash mismatch" },
@@ -204,8 +173,7 @@ export async function PATCH(
       );
     }
 
-    // Only update if currently in 'pending' status
-    // Don't override Circle's authoritative updates
+    // Never override Circle's authoritative status.
     if (transaction.status !== "pending") {
       return NextResponse.json(
         {
@@ -221,7 +189,6 @@ export async function PATCH(
       );
     }
 
-    // Build metadata with blockchain confirmation details
     const metadata = {
       ...(transaction.metadata || {}),
       metamask_confirmation: {
@@ -231,7 +198,6 @@ export async function PATCH(
       },
     };
 
-    // Increment user credits if this is a credit transaction
     if (transaction.direction === "credit" && transaction.credit_amount && transaction.user_id) {
       console.log(`Transaction ${transaction.id} completed. Crediting user ${transaction.user_id} with ${transaction.credit_amount} credits.`);
 
@@ -242,13 +208,11 @@ export async function PATCH(
 
       if (creditsError) {
         console.error(`CRITICAL: Failed to increment credits for user ${transaction.user_id} on transaction ${transaction.id}. Error:`, creditsError);
-        // Continue with status update even if credits fail - we can fix this manually
       } else {
         console.log(`Successfully credited user ${transaction.user_id}.`);
       }
     }
 
-    // Update transaction to 'complete' status
     const { data: updatedTransaction, error: updateError } =
       await supabaseAdminClient
         .from("transactions")
