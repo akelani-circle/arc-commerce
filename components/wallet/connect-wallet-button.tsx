@@ -43,7 +43,6 @@ export function ConnectWalletButton() {
     return addr.slice(0, 6) + "..." + addr.slice(-4);
   }
 
-  // On the server, and for the initial client render, show a neutral placeholder.
   if (!isClient) {
     return (
       <Button variant="outline" disabled size="sm">
@@ -52,7 +51,6 @@ export function ConnectWalletButton() {
     );
   }
 
-  // From this point on, we are on the client and can safely check window.ethereum
   if (!(window as { ethereum?: unknown }).ethereum) {
     return (
       <Button

@@ -167,7 +167,6 @@ export const columns: ColumnDef<typeof features, TransactionRow>[] = [
     cell: ({ row }) => {
       const status = row.original.status.toUpperCase();
 
-      // Define status-specific styling for better visibility in both themes
       const getStatusStyle = () => {
         switch (status) {
           case "COMPLETE":

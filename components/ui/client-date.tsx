@@ -26,17 +26,10 @@ interface ClientDateProps {
   formatString?: string;
 }
 
-/**
- * Client-side date formatter that prevents hydration mismatches.
- * Only renders the formatted date after the component mounts on the client.
- * This ensures consistent formatting between server and client renders.
- */
 export function ClientDate({ date, formatString = "PPpp" }: ClientDateProps) {
   const mounted = useIsClient();
 
   if (!mounted) {
-    // During SSR, return empty content to avoid hydration mismatch
-    // The actual date will render after mount
     return <span suppressHydrationWarning>&nbsp;</span>;
   }
 

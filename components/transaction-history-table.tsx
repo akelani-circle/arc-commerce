@@ -44,8 +44,8 @@ interface ApiTransaction {
 }
 
 interface TransactionHistoryProps {
-  showHeader?: boolean;      // optionally render heading / back button
-  backHref?: string;         // backlink destination if header shown
+  showHeader?: boolean;
+  backHref?: string;
   className?: string;
 }
 
@@ -89,7 +89,6 @@ export function TransactionHistory({
 
     load();
 
-    // Realtime subscription (INSERT + UPDATE on transactions)
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     supabase.auth.getUser().then(({ data: { user } }) => {

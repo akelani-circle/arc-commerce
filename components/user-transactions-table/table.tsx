@@ -83,7 +83,6 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  // The onClick handler and cursor-pointer class are now back.
                   onClick={() => handleRowClick(row.original)}
                   className="cursor-pointer"
                 >

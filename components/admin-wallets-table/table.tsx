@@ -184,8 +184,6 @@ export function AdminWalletsTable({
     [data, transferSourceWallet]
   );
 
-  // We explicitly check that `newWalletBlockchain` is not an empty string.
-  // This ensures the expression always returns a true boolean.
   const isCreateFormValid = useMemo(() => {
     return newWalletLabel.trim().length >= 3 && newWalletBlockchain !== "";
   }, [newWalletLabel, newWalletBlockchain]);

@@ -20,7 +20,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/admin";
 import { getPrimaryDestinationAddress } from "@/lib/payments/destination";
 
-export const dynamic = 'force-dynamic'; // Ensures the route is not cached
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

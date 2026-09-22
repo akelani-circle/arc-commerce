@@ -49,7 +49,6 @@ export const columns: ColumnDef<typeof features, AdminTransaction>[] = [
     accessorKey: "source_wallet",
     header: "Source",
     cell: ({ row }) => {
-      // For USER transactions, show the user's wallet_id (truncated)
       if (row.original.transaction_type === "USER" && row.original.wallet_id) {
         const wallet = row.original.wallet_id;
         return (
@@ -58,7 +57,6 @@ export const columns: ColumnDef<typeof features, AdminTransaction>[] = [
           />
         );
       }
-      // For ADMIN transactions, show the admin wallet label
       return row.original.source_wallet?.label ?? "N/A";
     },
   },
@@ -92,7 +90,6 @@ export const columns: ColumnDef<typeof features, AdminTransaction>[] = [
     header: "Type",
     cell: ({ row }) => {
       const type = row.original.transaction_type;
-      // Using a Badge for consistency and readability
       return type;
     },
   },
@@ -102,7 +99,6 @@ export const columns: ColumnDef<typeof features, AdminTransaction>[] = [
     cell: ({ row }) => {
       const status = row.original.status.toUpperCase();
 
-      // Define status-specific styling for better visibility in both themes
       const getStatusStyle = () => {
         switch (status) {
           case "COMPLETE":
