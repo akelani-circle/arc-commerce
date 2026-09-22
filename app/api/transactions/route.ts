@@ -36,20 +36,6 @@ interface TransactionWebhookEvent {
   [k: string]: unknown;
 }
 
-/**
- * POST /api/transactions
- * Records a (credit) top-up transaction after it has been broadcast on-chain.
- *
- * Expected JSON body:
- * {
- *   "credits": number,
- *   "usdcAmount": number,          // decimal USDC (e.g. 12.34)
- *   "txHash": string,              // 0x...
- *   "chainId": number,
- *   "walletAddress": string,       // sender wallet 0x...
- *   "destinationAddress": string   // admin wallet recipient 0x... (optional)
- * }
- */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -71,7 +57,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Get authenticated user via regular server client (anon key + cookies)
     const supabase = await createServerSupabase();
     const {
       data: { user },
@@ -83,9 +68,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Build insert row. The RLS policy only allows service_role inserts,
-    // so we use the admin (service role) client here.
-    // Exchange rate: 1 credit = X USDC (currently 0.01)
+    // RLS only allows service_role inserts.
     const EXCHANGE_RATE_USDC_PER_CREDIT = 0.01;
     const idempotencyKey = `${chainId}:${txHash}`;
 
@@ -96,9 +79,9 @@ export async function POST(req: NextRequest) {
           transaction_type: "USER",
           user_id: user.id,
           wallet_id: walletAddress,
-          destination_address: destinationAddress || null, // Capture admin wallet destination
+          destination_address: destinationAddress || null,
           direction: "credit",
-          amount_usdc: usdcAmount, // numeric(18,6)
+          amount_usdc: usdcAmount,
           fee_usdc: 0,
           credit_amount: credits,
           exchange_rate: EXCHANGE_RATE_USDC_PER_CREDIT,
@@ -119,13 +102,11 @@ export async function POST(req: NextRequest) {
         hint: insertError.hint,
         details: insertError.details,
       });
-      // Check if this is a duplicate transaction (idempotency)
       if (
         insertError.message.includes("idempotency") ||
         insertError.message.includes("duplicate") ||
         insertError.code === "23505"
       ) {
-        // Try to find the existing transaction
         const { data: existingTx } = await supabaseAdminClient
           .from("transactions")
           .select("*")
@@ -213,7 +194,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Fetch user transactions (filter by USER type)
     const { data: transactions, error: txError } = await supabase
       .from("transactions")
       .select("*")
@@ -235,7 +215,6 @@ export async function GET(req: NextRequest) {
 
     const ids = transactions.map((t) => t.id);
 
-    // Status change events
     const { data: statusEvents, error: seError } = await supabase
       .from("transaction_events")
       .select("*")
@@ -252,7 +231,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Optional raw webhook events
     let webhookEvents: TransactionWebhookEvent[] | null = null;
     if (includeWebhook) {
       const { data: weData, error: weError } = await supabase
@@ -273,7 +251,6 @@ export async function GET(req: NextRequest) {
       webhookEvents = weData;
     }
 
-    // Aggregate events by transaction_id
     const statusByTx = new Map<string, TransactionEvent[]>();
     (statusEvents || []).forEach((e) => {
       const arr = statusByTx.get(e.transaction_id) || [];

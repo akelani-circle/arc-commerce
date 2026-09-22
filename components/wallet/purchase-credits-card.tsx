@@ -64,11 +64,9 @@ export function PurchaseCreditsCard() {
     fee?: number;
   } | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  // State to hold the fetched destination address and its loading status
   const [destination, setDestination] = useState<`0x${string}` | undefined>();
   const [isLoadingDestination, setIsLoadingDestination] = useState(true);
 
-  // Effect to fetch the destination address from our new API endpoint
   useEffect(() => {
     async function fetchDestinationWallet() {
       try {
@@ -98,7 +96,6 @@ export function PurchaseCreditsCard() {
 
   const requiredUsdc = creditsToPurchase * USDC_PER_CREDIT;
   const requiredUsdcMicro = useMemo(() => {
-    // Convert to 6‑decimal integer (avoid FP drift)
     const micro = Math.round(requiredUsdc * 1_000_000);
     return BigInt(micro);
   }, [requiredUsdc]);
@@ -145,7 +142,6 @@ export function PurchaseCreditsCard() {
 
     setIsSubmitting(true);
     try {
-      // Prompt wallet (MetaMask/etc) for ERC20 transfer
       const txHash = await writeContractAsync({
         address: usdcAddress,
         abi: erc20Abi,
@@ -157,7 +153,6 @@ export function PurchaseCreditsCard() {
         description: `Hash: ${txHash.slice(0, 10)}...`,
       });
 
-      // Persist (fire-and-forget with basic handling)
       const res = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,7 +164,7 @@ export function PurchaseCreditsCard() {
           txHash,
           chainId,
           walletAddress: address,
-          destinationAddress: destination, // Include admin wallet destination
+          destinationAddress: destination,
         }),
       });
 
@@ -181,9 +176,8 @@ export function PurchaseCreditsCard() {
       } else {
         const responseData = await res.json();
 
-        // Create transaction object for confirmation modal
         const transaction = {
-          id: responseData.transactionId || txHash, // Fallback to txHash if no ID returned
+          id: responseData.transactionId || txHash,
           credits: creditsToPurchase,
           usdcAmount: Number((requiredUsdcMicro / 1_000_000n).toString()) +
             Number(requiredUsdcMicro % 1_000_000n) / 1_000_000,
@@ -191,7 +185,7 @@ export function PurchaseCreditsCard() {
           chainId,
           status: "pending" as const,
           createdAt: new Date().toISOString(),
-          fee: 0, // Network fees are handled separately
+          fee: 0,
         };
 
         setCurrentTransaction(transaction);
@@ -217,7 +211,6 @@ export function PurchaseCreditsCard() {
   const handleRetry = () => {
     setShowConfirmation(false);
     setCurrentTransaction(null);
-    // The user can click the purchase button again to retry
   };
 
   const handleCloseConfirmation = () => {
@@ -251,8 +244,6 @@ export function PurchaseCreditsCard() {
 
           <div className="grid grid-cols-4 gap-2">
             {presetUsdcAmounts.map((amount) => {
-              // The logic here updates automatically with the new conversion rate.
-              // e.g., $10 button now sets credits to 10.
               const credits = amount / USDC_PER_CREDIT;
               const isActive = creditsToPurchase === credits;
               return (

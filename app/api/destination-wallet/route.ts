@@ -19,20 +19,19 @@
 import { NextResponse } from "next/server";
 import { supabaseAdminClient } from "@/lib/supabase/admin-client";
 
-export const dynamic = 'force-dynamic'; // Ensures the route is not cached
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
     const { data, error } = await supabaseAdminClient
       .from("admin_wallets")
       .select("address")
-      .order("created_at", { ascending: true }) // Get the oldest row first
+      .order("created_at", { ascending: true })
       .limit(1)
-      .single(); // Expect only one row
+      .single();
 
     if (error) {
       console.error("Supabase query error:", error);
-      // RLS errors can be cryptic, so provide a clearer message.
       if (error.code === 'PGRST116') {
         return NextResponse.json({ error: "No destination wallet found in the database." }, { status: 404 });
       }

@@ -77,7 +77,6 @@ export function TransactionConfirmationModal({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [realtimeTx, setRealtimeTx] = useState<TransactionData | null>(transaction);
 
-  // Monitor transaction receipt from MetaMask/wallet
   const { data: receipt, isSuccess: isReceiptConfirmed } = useWaitForTransactionReceipt({
     hash: transaction?.txHash as `0x${string}` | undefined,
     chainId: transaction?.chainId,
@@ -87,7 +86,6 @@ export function TransactionConfirmationModal({
     },
   });
 
-  // Update status to 'complete' when MetaMask confirms the transaction
   useEffect(() => {
     if (!transaction || !isReceiptConfirmed || !receipt) return;
 
@@ -119,7 +117,6 @@ export function TransactionConfirmationModal({
         }
       } catch (error) {
         console.error("Failed to update transaction status:", error);
-        // Don't show error toast - Circle webhook will still update it
       }
     };
 
@@ -129,7 +126,6 @@ export function TransactionConfirmationModal({
   useEffect(() => {
     if (!transaction || !isOpen) return;
 
-    // Dynamically import Supabase client to avoid SSR issues
     let channel: RealtimeChannel;
     let supabase: SupabaseClient;
     let isMounted = true;

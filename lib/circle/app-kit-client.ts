@@ -16,16 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace NodeJS {
-  interface ProcessEnv {
-    NEXT_PUBLIC_SUPABASE_URL: string
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: string
-    SUPABASE_SECRET_KEY: string
+import { AppKit } from "@circle-fin/app-kit";
+import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
 
-    CIRCLE_API_KEY: string
-    CIRCLE_ENTITY_SECRET: string
-    CIRCLE_BLOCKCHAIN: string
+let cachedKit: AppKit | null = null;
 
-    ADMIN_EMAIL: string
-  }
+export function getAppKit(): AppKit {
+  if (!cachedKit) cachedKit = new AppKit();
+  return cachedKit;
+}
+
+export function createAdapter() {
+  return createCircleWalletsAdapter({
+    apiKey: process.env.CIRCLE_API_KEY!,
+    entitySecret: process.env.CIRCLE_ENTITY_SECRET!,
+  });
 }

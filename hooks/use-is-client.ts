@@ -16,16 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-namespace NodeJS {
-  interface ProcessEnv {
-    NEXT_PUBLIC_SUPABASE_URL: string
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: string
-    SUPABASE_SECRET_KEY: string
+"use client";
 
-    CIRCLE_API_KEY: string
-    CIRCLE_ENTITY_SECRET: string
-    CIRCLE_BLOCKCHAIN: string
+import { useSyncExternalStore } from "react";
 
-    ADMIN_EMAIL: string
-  }
+const subscribe = () => () => {};
+
+export function useIsClient() {
+  return useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false
+  );
 }
