@@ -18,8 +18,7 @@ Integrate USDC as a payment method for purchasing credits on Arc. This sample ap
 ## Prerequisites
 
 - **Node.js v22+** — Install via [nvm](https://github.com/nvm-sh/nvm) (`nvm use` will read the `.nvmrc` file)
-- **Supabase CLI** — Install via `npm install -g supabase` or see [Supabase CLI docs](https://supabase.com/docs/guides/cli/getting-started)
-- **Docker Desktop** (only if using the local Supabase path) — [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **Docker Desktop** — Runs Supabase locally. [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - **[ngrok](https://ngrok.com/)** - for local webhook testing)
 - Circle Developer Controlled Wallets **[API key](https://console.circle.com/signin)** and **[Entity Secret](https://developers.circle.com/wallets/dev-controlled/register-entity-secret)**
 
@@ -28,17 +27,12 @@ Integrate USDC as a payment method for purchasing credits on Arc. This sample ap
 1. Clone the repository and install dependencies:
 
    ```bash
-   git clone git@github.com:circlefin/arc-commerce.git
+   git clone git@github.com:akelani-circle/arc-commerce.git
    cd arc-commerce
    npm install
    ```
 
-2. Set up the database — Choose one of the two paths below:
-
-   <details>
-   <summary><strong>Path 1: Local Supabase (Docker)</strong></summary>
-
-   Requires Docker Desktop installed and running.
+2. Start the local Supabase instance (requires Docker Desktop running):
 
    ```bash
    npx supabase start
@@ -46,22 +40,6 @@ Integrate USDC as a payment method for purchasing credits on Arc. This sample ap
    ```
 
    The output of `npx supabase start` will display the Supabase URL and API keys needed in the next step.
-
-   </details>
-
-   <details>
-   <summary><strong>Path 2: Remote Supabase (Cloud)</strong></summary>
-
-   Requires a [Supabase](https://supabase.com/) account and project.
-
-   ```bash
-   npx supabase link --project-ref <your-project-ref>
-   npx supabase db push
-   ```
-
-   Retrieve your project URL and API keys from the Supabase dashboard under **Settings → API**.
-
-   </details>
 
 3. Set up environment variables:
 
@@ -148,8 +126,7 @@ Regular users who sign up will see the **User Dashboard**, which allows them to 
 
 Supabase limits email signups to **2 per hour** by default (unless custom SMTP is configured). If you hit an "email rate limit exceeded" error during testing:
 
-- **Local Supabase (Docker):** Email verification is handled by the built-in [Inbucket](http://127.0.0.1:54324) mail server — check it to confirm signups. The rate limit can be adjusted in `supabase/config.toml` under `[auth.rate_limit]`.
-- **Remote Supabase (Cloud):** Use real email addresses (disposable emails may fail verification). If you hit the limit, you can manually add users via the Supabase dashboard under **Authentication → Users**.
+Email verification is handled by the built-in [Inbucket](http://127.0.0.1:54324) mail server — check it to confirm signups. The rate limit can be adjusted in `supabase/config.toml` under `[auth.rate_limit]`.
 
 ## Available Scripts
 
