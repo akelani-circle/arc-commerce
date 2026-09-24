@@ -6,31 +6,20 @@ Integrate USDC as a payment method for purchasing credits on Arc. This sample ap
 
 ## Table of Contents
 
-- [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [How It Works](#how-it-works)
 - [Environment Variables](#environment-variables)
 - [User Accounts](#user-accounts)
 - [Available Scripts](#available-scripts)
+- [Testing](#testing)
 - [Security & Usage Model](#security--usage-model)
-
-## Features
-
-The dashboard (`/dashboard`) shows a different view for regular users and the admin:
-
-- **Sign up and log in** (`/auth/sign-up`, `/auth/login`) — Email and password accounts backed by Supabase Auth, with password reset.
-- **Purchase credits** (`PurchaseCreditsCard`) — Connect a browser wallet and pay for credits with USDC on Arc Testnet and other supported testnets.
-- **Purchase history** (`TransactionHistory`) — Your credit purchases with date, status, and network filters. Updates in real time.
-- **Transaction details** (`/dashboard/[txHash]`) — Status, amounts, and explorer link for a single purchase.
-- **Admin wallets** (`AdminWalletsTable`) — Create Developer-Controlled Wallets, check balances, enable, disable, or archive them, and move USDC between wallets on the same chain or across chains.
-- **Admin transactions** (`AdminTransactionsTable`) — Every admin transfer and incoming user payment, updated in real time.
 
 ## Prerequisites
 
 - **Node.js v22+** — Install via [nvm](https://github.com/nvm-sh/nvm) (`nvm use` will read the `.nvmrc` file)
-- **Docker Desktop** — required to run Supabase locally. [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- **[ngrok](https://ngrok.com/)** — for local webhook testing
+- **Docker Desktop** — Runs Supabase locally. [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **[ngrok](https://ngrok.com/)** - for local webhook testing)
 - Circle Developer Controlled Wallets **[API key](https://console.circle.com/signin)** and **[Entity Secret](https://developers.circle.com/wallets/dev-controlled/register-entity-secret)**
 
 ## Getting Started
@@ -46,10 +35,11 @@ The dashboard (`/dashboard`) shows a different view for regular users and the ad
 2. Start the local Supabase instance (requires Docker Desktop running):
 
    ```bash
-   npm run db:start
+   npx supabase start
+   npx supabase migration up
    ```
 
-   This starts Supabase in Docker and applies the migrations in `supabase/migrations`. The output shows the Supabase URL and API keys needed in the next step. Run `npm run db:status` to see them again.
+   The output of `npx supabase start` will display the Supabase URL and API keys needed in the next step.
 
 3. Set up environment variables:
 
@@ -86,7 +76,7 @@ The dashboard (`/dashboard`) shows a different view for regular users and the ad
 - Uses [Circle Developer Controlled Wallets](https://developers.circle.com/wallets/dev-controlled) for USDC transactions
 - Wallet operations handled server-side with `@circle-fin/developer-controlled-wallets`
 - Admin transfers use `@circle-fin/app-kit` with the Circle Wallets adapter: `kit.send` for same-chain transfers and `kit.bridge` for cross-chain transfers
-- User payments are sent from the browser with [wagmi](https://wagmi.sh/) and [viem](https://viem.sh/)
+- User payments are sent from the browser with [wagmi](https://wagmi.sh/) and [viem](https://viem.sh/); the server verifies the transaction receipt before granting credits
 - Webhook signature verification ensures secure transaction notifications
 - Admin wallet automatically initialized on first run
 
@@ -109,17 +99,15 @@ CIRCLE_BLOCKCHAIN=ARC-TESTNET
 ADMIN_EMAIL=admin@admin.com
 ```
 
-| Variable | Scope | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Public | Local Supabase API URL (from `npm run db:status`). |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public | Local Supabase publishable key (from `npm run db:status`). |
-| `SUPABASE_SECRET_KEY` | Server-side | Local Supabase secret key for privileged writes, e.g. transaction inserts (from `npm run db:status`). |
-| `CIRCLE_API_KEY` | Server-side | Circle API key for wallet operations and webhook signature verification. |
-| `CIRCLE_ENTITY_SECRET` | Server-side | Circle entity secret for wallet operations. |
-| `CIRCLE_BLOCKCHAIN` | Server-side | Default blockchain for new wallets (e.g., `ARC-TESTNET`). |
-| `ADMIN_EMAIL` | Server-side | Admin user email address. |
-| `VERCEL_URL` | Server-side | Optional. Set automatically on Vercel. Used as the app's base URL for metadata; defaults to `http://localhost:3000`. |
-| `NEXT_PUBLIC_VERCEL_URL` | Public | Optional. Set automatically on Vercel. Used as the base URL for server-side calls to the app's own API; defaults to `http://localhost:3000`. |
+| Variable                              | Scope       | Purpose                                                                  |
+| ------------------------------------- | ----------- | ------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`            | Public      | Supabase project URL.                                                    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public     | Supabase publishable key.                                                |
+| `SUPABASE_SECRET_KEY`           | Server-side | Secret key for privileged writes (e.g., transaction inserts).                  |
+| `CIRCLE_API_KEY`                      | Server-side | Used to fetch Circle webhook public keys for signature verification.     |
+| `CIRCLE_ENTITY_SECRET`                | Server-side | Circle entity secret for wallet operations.                              |
+| `CIRCLE_BLOCKCHAIN`                   | Server-side | Blockchain network identifier (e.g., "ARC-TESTNET").                     |
+| `ADMIN_EMAIL`                         | Server-side | Admin user email address.                                                |
 
 ## User Accounts
 
@@ -136,20 +124,21 @@ Regular users who sign up will see the **User Dashboard**, which allows them to 
 
 ### Signup Rate Limits
 
-Supabase limits email signups to **2 per hour** by default. Emails are not actually sent. Open the local mail server at [http://127.0.0.1:54324](http://127.0.0.1:54324) to confirm signups. If you hit an "email rate limit exceeded" error during testing, raise `email_sent` under `[auth.rate_limit]` in `supabase/config.toml`, then restart with `npm run db:stop` and `npm run db:start`.
+Supabase limits email signups to **2 per hour** by default (unless custom SMTP is configured). If you hit an "email rate limit exceeded" error during testing:
+
+Email verification is handled by the built-in [Inbucket](http://127.0.0.1:54324) mail server — check it to confirm signups. The rate limit can be adjusted in `supabase/config.toml` under `[auth.rate_limit]`.
 
 ## Available Scripts
 
-- `npm run dev` — Start the Next.js development server with Turbopack
-- `npm run build` — Create a production build
-- `npm run start` — Start the production server
-- `npm run lint` — Run ESLint
-- `npm run db:start` — Start the local Supabase instance and apply migrations
-- `npm run db:stop` — Stop the local Supabase instance
-- `npm run db:status` — Show local Supabase URLs and API keys
-- `npm run db:reset` — Recreate the local database and re-run all migrations
-- `npm run db:migration <name>` — Create a new migration file in `supabase/migrations`
-- `npm run supabase -- <command>` — Run any other Supabase CLI command
+- `npm run dev`: Start Next.js development server with auto-reload
+- `npx supabase start`: Start local Supabase instance
+- `npx supabase migration up`: Apply database migrations
+- `npm test`: Run the unit tests (no services needed)
+- `npm run test:integration`: Run database tests against the local Supabase
+
+## Testing
+
+Unit tests live in `tests/unit` and mock Supabase, Circle and the chain. Integration tests in `tests/integration` run against the local Supabase stack and read connection settings from `.env.local`.
 
 ## Security & Usage Model
 
@@ -160,3 +149,7 @@ This sample application:
 - Is not intended for production use without modification
 
 See `SECURITY.md` for vulnerability reporting guidelines. Please report issues privately via Circle's bug bounty program.
+
+## Legal
+
+Sample apps provided for demonstration and educational purposes only, intended for Arc testnet use only, and not production-ready. See [Arc.io](https://arc.io) for more.

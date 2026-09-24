@@ -53,6 +53,7 @@ export const CHAIN_IDS_TO_USDC_TOKEN_ID: Record<number, string> = {
   [SupportedChainId.ARC_TESTNET]: "15dc2b5d-0994-58b0-bf8c-3a0501148ee8"
 };
 
+// Maps Circle/DB chain strings (e.g. "ARC-TESTNET") to App Kit BridgeChain identifiers.
 export const CHAIN_DB_TO_BRIDGE_CHAIN: Record<string, string> = {
   "ARC-TESTNET": "Arc_Testnet",
   "ETH-SEPOLIA": "Ethereum_Sepolia",

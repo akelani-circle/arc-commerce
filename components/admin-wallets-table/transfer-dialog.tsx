@@ -133,8 +133,15 @@ export function TransferDialog({
         toast.error("Transfer Failed", { description: result.error });
       } else {
         toast.success("Transfer Submitted Successfully", {
-          description: `Tx: ${result.txHash?.slice(0, 15)}...`,
+          description: result.txHash
+            ? `Tx: ${result.txHash.slice(0, 15)}...`
+            : undefined,
         });
+        if (result.warning) {
+          toast.warning("Transaction history not saved", {
+            description: result.warning,
+          });
+        }
         onClose();
       }
     } catch {

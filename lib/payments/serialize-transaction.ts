@@ -16,12 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export function convertToSmallestUnit(amount: string): number {
-  const usdcDecimals = 6;
+import { Database } from "@/types/supabase";
 
-  const multiplier = 10 ** usdcDecimals;
+type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"];
 
-  const amountInSmallestUnit = parseFloat(amount) * multiplier;
-
-  return Math.round(amountInSmallestUnit);
+/** Shape returned to the browser for a recorded USER purchase. */
+export function serializeTransaction(tx: TransactionRow) {
+  return {
+    id: tx.id,
+    credits: Number(tx.credit_amount),
+    usdcAmount: Number(tx.amount_usdc),
+    txHash: tx.tx_hash,
+    chainId: Number(tx.chain),
+    status: tx.status,
+    createdAt: tx.created_at,
+    walletAddress: tx.wallet_id,
+  };
 }

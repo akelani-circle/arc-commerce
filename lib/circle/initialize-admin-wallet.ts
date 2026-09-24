@@ -18,10 +18,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
-
-const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  : "http://localhost:3000";
+import { createWalletSetWithWallet } from "@/lib/circle/wallets";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_KEY;
@@ -75,41 +72,10 @@ const runPlatformInitialization = async () => {
       return;
     }
 
+    // 3. If not in DB, create it directly through the Circle SDK.
     console.log("No platform admin wallet found. Creating a new one...");
 
-    const createdWalletSetResponse = await fetch(`${baseUrl}/api/wallet-set`, {
-      method: "POST",
-      body: JSON.stringify({ entityName: "platform-operator" }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!createdWalletSetResponse.ok) {
-      const errorBody = await createdWalletSetResponse.json();
-      throw new Error(
-        `Failed to create wallet set via internal API: ${errorBody.error || "Unknown error"
-        }`
-      );
-    }
-    const createdWalletSet = await createdWalletSetResponse.json();
-
-    const createdWalletResponse = await fetch(`${baseUrl}/api/wallet`, {
-      method: "POST",
-      body: JSON.stringify({ walletSetId: createdWalletSet.id }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!createdWalletResponse.ok) {
-      const errorBody = await createdWalletResponse.json();
-      throw new Error(
-        `Failed to create wallet via internal API: ${errorBody.error || "Unknown error"
-        }`
-      );
-    }
-    const newWallet = await createdWalletResponse.json();
-
-    if (!newWallet || !newWallet.id || !newWallet.address) {
-      throw new Error("Internal API did not return a complete wallet object.");
-    }
+    const newWallet = await createWalletSetWithWallet("platform-operator");
 
     const { error: insertError } = await supabaseAdminClient
       .from("admin_wallets")

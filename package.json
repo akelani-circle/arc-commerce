@@ -13,7 +13,10 @@
     "db:stop": "supabase stop",
     "db:status": "supabase status",
     "db:reset": "supabase db reset",
-    "db:migration": "supabase migration new"
+    "db:migration": "supabase migration new",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.mts"
   },
   "dependencies": {
     "@circle-fin/adapter-circle-wallets": "^1.8.0",
@@ -58,6 +61,7 @@
     "supabase": "^2.117.0",
     "tailwindcss": "^4.1.13",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.1"
   }
 }

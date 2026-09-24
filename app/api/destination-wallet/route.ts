@@ -17,33 +17,23 @@
  */
 
 import { NextResponse } from "next/server";
-import { supabaseAdminClient } from "@/lib/supabase/admin-client";
+import { getCurrentUser } from "@/lib/auth/admin";
+import { getPrimaryDestinationAddress } from "@/lib/payments/destination";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdminClient
-      .from("admin_wallets")
-      .select("address")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .single();
-
-    if (error) {
-      console.error("Supabase query error:", error);
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: "No destination wallet found in the database." }, { status: 404 });
-      }
-      throw error;
+    if (!(await getCurrentUser())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!data || !data.address) {
+    const address = await getPrimaryDestinationAddress();
+    if (!address) {
       return NextResponse.json({ error: "No destination wallet found." }, { status: 404 });
     }
 
-    return NextResponse.json({ address: data.address });
-
+    return NextResponse.json({ address });
   } catch (error) {
     const message = error instanceof Error ? error.message : "An unknown error occurred.";
     console.error("Failed to fetch destination wallet:", message);

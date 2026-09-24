@@ -37,8 +37,8 @@ import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
 import { TransactionConfirmationModal } from "@/components/wallet/transaction-confirmation-modal";
+import { USDC_PER_CREDIT, microToUsdc } from "@/lib/payments/credits";
 
-const USDC_PER_CREDIT = 1;
 const presetUsdcAmounts = [10, 25, 50, 100];
 
 export function PurchaseCreditsCard() {
@@ -159,8 +159,7 @@ export function PurchaseCreditsCard() {
         body: JSON.stringify({
           credits: creditsToPurchase,
           usdcAmount:
-            Number((requiredUsdcMicro / 1_000_000n).toString()) +
-            Number(requiredUsdcMicro % 1_000_000n) / 1_000_000,
+microToUsdc(requiredUsdcMicro),
           txHash,
           chainId,
           walletAddress: address,
@@ -179,8 +178,7 @@ export function PurchaseCreditsCard() {
         const transaction = {
           id: responseData.transactionId || txHash,
           credits: creditsToPurchase,
-          usdcAmount: Number((requiredUsdcMicro / 1_000_000n).toString()) +
-            Number(requiredUsdcMicro % 1_000_000n) / 1_000_000,
+          usdcAmount: microToUsdc(requiredUsdcMicro),
           txHash,
           chainId,
           status: "pending" as const,
