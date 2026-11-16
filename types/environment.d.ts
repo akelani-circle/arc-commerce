@@ -27,5 +27,6 @@ namespace NodeJS {
     CIRCLE_BLOCKCHAIN: string
 
     ADMIN_EMAIL: string
+    ADMIN_PASSWORD?: string
   }
 }

@@ -37,7 +37,7 @@ const arcTestnet = {
   name: "Arc Testnet",
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://rpc.testnet.arc.network"] },
+    default: { http: ["https://rpc.testnet.arc.io"] },
   },
   blockExplorers: {
     default: { name: "Arcscan", url: "https://testnet.arcscan.app/" },
@@ -47,6 +47,7 @@ const arcTestnet = {
       address: "0xca11bde05977b3631167028862be2a173976ca11",
     },
   },
+  testnet: true,
 } as const satisfies Chain;
 
 export const SUPPORTED_CHAINS = [
