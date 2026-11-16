@@ -18,6 +18,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { resolveAdminEmail, resolveAdminPassword } from "@/lib/auth/admin-password";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_KEY;
@@ -37,13 +38,42 @@ if (supabaseUrl && supabaseServiceRoleKey) {
   );
 }
 
+const findUserIdByEmail = async (
+  client: SupabaseClient,
+  email: string
+): Promise<string | null> => {
+  const perPage = 1000;
+  for (let page = 1; ; page++) {
+    const { data, error } = await client.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+    const match = data.users.find((user) => user.email?.toLowerCase() === email);
+    if (match) return match.id;
+    if (data.users.length < perPage) return null;
+  }
+};
+
 const createAdminUserIfNotExists = async () => {
   if (!adminAuthClient) {
     return;
   }
 
-  const adminEmail = "admin@admin.com";
-  const adminPassword = "123456";
+  // The admin account is always created, so nobody can sign up with the admin
+  // email and inherit admin rights. Without a strong ADMIN_PASSWORD it gets a
+  // random password and stays locked until one is set.
+  const adminEmail = resolveAdminEmail(process.env.ADMIN_EMAIL);
+  const { password: adminPassword, source } = resolveAdminPassword(
+    process.env.ADMIN_PASSWORD
+  );
+
+  if (source !== "env") {
+    console.error(
+      (source === "missing"
+        ? "ADMIN_PASSWORD is not set."
+        : "ADMIN_PASSWORD is too weak (must be at least 8 characters and not a well-known password).") +
+        ` The admin account ${adminEmail} is locked with a random password. ` +
+        "Set a strong ADMIN_PASSWORD and restart to sign in as admin."
+    );
+  }
 
   const { data: adminUserExists, error: rpcError } = await adminAuthClient.rpc(
     "check_user_exists",
@@ -76,9 +106,35 @@ const createAdminUserIfNotExists = async () => {
   }
 
   if (adminUserExists) {
-    console.log(
-      `Admin user with email ${adminEmail} already exists. Skipping creation.`
-    );
+    // Rotate on every start, so a deployment still on the old hardcoded
+    // "123456" password picks up ADMIN_PASSWORD (or is locked) after upgrading.
+    try {
+      const adminUserId = await findUserIdByEmail(adminAuthClient, adminEmail);
+      if (!adminUserId) {
+        console.error(
+          `❌ Admin user ${adminEmail} exists but could not be found to update its password.`
+        );
+        return;
+      }
+      const { error: updateError } =
+        await adminAuthClient.auth.admin.updateUserById(adminUserId, {
+          password: adminPassword,
+        });
+      if (updateError) {
+        console.error("❌ Error updating admin password:", updateError.message);
+        return;
+      }
+      console.log(
+        source === "env"
+          ? `Admin user ${adminEmail} password set from ADMIN_PASSWORD.`
+          : `Admin user ${adminEmail} locked with a random password.`
+      );
+    } catch (error) {
+      console.error(
+        "❌ Error looking up admin user:",
+        error instanceof Error ? error.message : error
+      );
+    }
     return;
   }
 
