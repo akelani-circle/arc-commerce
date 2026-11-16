@@ -18,6 +18,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { resolveAdminEmail, resolveAdminPassword } from "@/lib/auth/admin-password";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_KEY;
@@ -37,50 +38,41 @@ if (supabaseUrl && supabaseServiceRoleKey) {
   );
 }
 
-// Passwords that must never guard a privileged account, even if set explicitly.
-const COMMON_WEAK_PASSWORDS = new Set([
-  "123456",
-  "12345678",
-  "123456789",
-  "password",
-  "admin",
-  "admin123",
-  "qwerty",
-  "letmein",
-  "changeme",
-  "welcome",
-]);
-
-const isWeakPassword = (password: string): boolean =>
-  password.length < 8 || COMMON_WEAK_PASSWORDS.has(password.toLowerCase());
+const findUserIdByEmail = async (
+  client: SupabaseClient,
+  email: string
+): Promise<string | null> => {
+  const perPage = 1000;
+  for (let page = 1; ; page++) {
+    const { data, error } = await client.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+    const match = data.users.find((user) => user.email?.toLowerCase() === email);
+    if (match) return match.id;
+    if (data.users.length < perPage) return null;
+  }
+};
 
 const createAdminUserIfNotExists = async () => {
   if (!adminAuthClient) {
     return;
   }
 
-  // Never provision the admin account with a hardcoded, publicly known
-  // password. Require the deployment to supply one explicitly via
-  // ADMIN_PASSWORD and reject obviously weak values, so an exposed instance
-  // cannot be taken over with a guessable default. ADMIN_EMAIL keeps its
-  // documented default because the database RLS policies key off that address.
-  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@admin.com";
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  // The admin account is always created, so nobody can sign up with the admin
+  // email and inherit admin rights. Without a strong ADMIN_PASSWORD it gets a
+  // random password and stays locked until one is set.
+  const adminEmail = resolveAdminEmail(process.env.ADMIN_EMAIL);
+  const { password: adminPassword, source } = resolveAdminPassword(
+    process.env.ADMIN_PASSWORD
+  );
 
-  if (!adminPassword) {
-    console.warn(
-      "ADMIN_PASSWORD is not set. Skipping admin user creation. " +
-        "Set a strong ADMIN_PASSWORD to enable automatic admin provisioning."
-    );
-    return;
-  }
-
-  if (isWeakPassword(adminPassword)) {
+  if (source !== "env") {
     console.error(
-      "ADMIN_PASSWORD is too weak (must be at least 8 characters and not a " +
-        "well-known password). Skipping admin user creation."
+      (source === "missing"
+        ? "ADMIN_PASSWORD is not set."
+        : "ADMIN_PASSWORD is too weak (must be at least 8 characters and not a well-known password).") +
+        ` The admin account ${adminEmail} is locked with a random password. ` +
+        "Set a strong ADMIN_PASSWORD and restart to sign in as admin."
     );
-    return;
   }
 
   const { data: adminUserExists, error: rpcError } = await adminAuthClient.rpc(
@@ -114,9 +106,35 @@ const createAdminUserIfNotExists = async () => {
   }
 
   if (adminUserExists) {
-    console.log(
-      `Admin user with email ${adminEmail} already exists. Skipping creation.`
-    );
+    // Rotate on every start, so a deployment still on the old hardcoded
+    // "123456" password picks up ADMIN_PASSWORD (or is locked) after upgrading.
+    try {
+      const adminUserId = await findUserIdByEmail(adminAuthClient, adminEmail);
+      if (!adminUserId) {
+        console.error(
+          `❌ Admin user ${adminEmail} exists but could not be found to update its password.`
+        );
+        return;
+      }
+      const { error: updateError } =
+        await adminAuthClient.auth.admin.updateUserById(adminUserId, {
+          password: adminPassword,
+        });
+      if (updateError) {
+        console.error("❌ Error updating admin password:", updateError.message);
+        return;
+      }
+      console.log(
+        source === "env"
+          ? `Admin user ${adminEmail} password set from ADMIN_PASSWORD.`
+          : `Admin user ${adminEmail} locked with a random password.`
+      );
+    } catch (error) {
+      console.error(
+        "❌ Error looking up admin user:",
+        error instanceof Error ? error.message : error
+      );
+    }
     return;
   }
 

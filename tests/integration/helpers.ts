@@ -35,7 +35,7 @@ const clientOptions = { auth: { persistSession: false, autoRefreshToken: false }
 export const service: SupabaseClient = createClient(url, secretKey, clientOptions);
 
 export const ADMIN_EMAIL = "admin@admin.com";
-const PASSWORD = "123456"; // matches lib/supabase/initialize-admin-user.ts
+const PASSWORD = "123456"; // local test users, including the admin reset by ensureAdminUser
 const createdUserIds: string[] = [];
 
 export async function createUser(email = `it-${randomUUID()}@example.com`) {
@@ -49,10 +49,21 @@ export async function createUser(email = `it-${randomUUID()}@example.com`) {
   return { id: data.user.id, email };
 }
 
-/** Ensures the admin account exists (the app normally creates it at first boot). */
+/**
+ * Ensures the admin account exists with the test password. The app rotates the
+ * admin password on startup, so an existing account is reset rather than reused.
+ */
 export async function ensureAdminUser() {
   const { data } = await service.rpc("check_user_exists", { user_email: ADMIN_EMAIL });
-  if (data) return;
+  if (data) {
+    const { data: listed, error: listError } = await service.auth.admin.listUsers({ perPage: 1000 });
+    if (listError) throw new Error(`listing users failed: ${listError.message}`);
+    const admin = listed.users.find((user) => user.email === ADMIN_EMAIL);
+    if (!admin) throw new Error(`admin ${ADMIN_EMAIL} exists but was not listed`);
+    const { error: updateError } = await service.auth.admin.updateUserById(admin.id, { password: PASSWORD });
+    if (updateError) throw new Error(`resetting admin password failed: ${updateError.message}`);
+    return;
+  }
   const { error } = await service.auth.admin.createUser({
     email: ADMIN_EMAIL,
     password: PASSWORD,

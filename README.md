@@ -109,18 +109,18 @@ ADMIN_PASSWORD=
 | `CIRCLE_ENTITY_SECRET`                | Server-side | Circle entity secret for wallet operations.                              |
 | `CIRCLE_BLOCKCHAIN`                   | Server-side | Blockchain network identifier (e.g., "ARC-TESTNET").                     |
 | `ADMIN_EMAIL`                         | Server-side | Admin user email address. Defaults to `admin@admin.com`.                 |
-| `ADMIN_PASSWORD`                      | Server-side | Password for the auto-provisioned admin user. Required to create it; must be strong (>= 8 chars, not a common password). Leave blank to skip admin creation. |
+| `ADMIN_PASSWORD`                      | Server-side | Password for the auto-provisioned admin user. Must be strong (>= 8 chars, not a common password). If blank or weak, the admin account is locked with a random password. |
 
 ## User Accounts
 
 ### Admin Account
 
-On first startup, an admin user is automatically created **only if** `ADMIN_PASSWORD` is set to a strong value (see the environment table above):
+On every startup, the app makes sure the admin user exists and sets its password (see the environment table above):
 
 - **Email:** `ADMIN_EMAIL` (defaults to `admin@admin.com`)
 - **Password:** the value of `ADMIN_PASSWORD` — choose a strong, unique password
 
-If `ADMIN_PASSWORD` is unset, or weak (shorter than 8 characters or a well-known password), admin creation is skipped and a message is logged — so a publicly reachable deployment never ships with a guessable default.
+If `ADMIN_PASSWORD` is unset, or weak (shorter than 8 characters or a well-known password), the admin account is still created but locked with a random password, and an error is logged. Nobody can sign up with the admin email and take over the account. Set a strong `ADMIN_PASSWORD` and restart to sign in as admin. Existing deployments that still use the old `123456` password get the new password on their next restart.
 
 The admin account has access to the **Admin Dashboard**, which provides an overview of all users, wallets, and transactions in the system.
 
